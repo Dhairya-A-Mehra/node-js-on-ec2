@@ -1,0 +1,12 @@
+version: "3"
+services:
+  hello-world:
+    image: "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGE_TAG}"
+    ports:
+      - "3000:3000"
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /ecs/hello-world
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream-prefix: ecs

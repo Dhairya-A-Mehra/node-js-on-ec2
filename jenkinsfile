@@ -1,0 +1,53 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_ACCOUNT_ID = credentials('aws-account-id')  // Ensure this credential is set up in Jenkins
+        AWS_REGION = 'us-east-1'
+        ECR_REPO_NAME = 'hello-world-repo'
+        IMAGE_TAG = "latest"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Dhairya-A-Mehra/node-js-on-ec2.git'  // Replace with your repository URL
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO_NAME}:${IMAGE_TAG}")
+                }
+            }
+        }
+
+        stage('Login to ECR') {
+            steps {
+                script {
+                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                }
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                script {
+                    dockerImage.push()
+                }
+            }
+        }
+
+        stage('Deploy to ECS') {
+            steps {
+                script {
+                    sh """
+                    ecs-cli configure --cluster hello-world-cluster --region ${AWS_REGION} --default-launch-type FARGATE
+                    ecs-cli compose --file docker-compose.yml service up --create-log-groups --cluster-config hello-world-cluster
+                    """
+                }
+            }
+        }
+    }
+}
