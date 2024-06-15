@@ -75,8 +75,8 @@ resource "aws_ecs_service" "hello_world_service" {
 }
 
 resource "aws_alb" "hello_world_alb" {
-  name            = "hello-world-alb"
-  internal        = false
+  name               = "hello-world-alb"
+  internal           = false
   load_balancer_type = "application"
 
   security_groups = var.security_group_ids
