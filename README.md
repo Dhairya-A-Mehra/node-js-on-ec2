@@ -1,1 +1,1 @@
-# mode-js-on-ec2
+# node-js-on-ec2
