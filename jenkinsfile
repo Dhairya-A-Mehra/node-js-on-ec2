@@ -5,7 +5,7 @@ pipeline {
         AWS_REGION = 'us-east-1'
         ECR_REPO_NAME = 'ptapp2'
         IMAGE_TAG = 'latest'
-        AWS_CREDENTIALS = credentials('mycred-id')  // Ensure this credential is set up in Jenkins
+        AWS_CREDENTIALS = credentials('aws-prod')  // Update this to match your AWS credentials ID
     }
 
     stages {
