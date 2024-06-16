@@ -2,16 +2,25 @@ pipeline {
     agent any
 
     environment {
-        AWS_ACCOUNT_ID = credentials('aws-account-id')  // Ensure this credential is set up in Jenkins
         AWS_REGION = 'us-east-1'
-        ECR_REPO_NAME = 'hello-world-repo'
-        IMAGE_TAG = "latest"
+        ECR_REPO_NAME = 'ptapp2'
+        IMAGE_TAG = 'latest'
+        AWS_CREDENTIALS = credentials('mycred-id')  // Ensure this credential is set up in Jenkins
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Dhairya-A-Mehra/node-js-on-ec2.git'  // Replace with your repository URL
+                git branch: 'main', url: 'https://github.com/Dhairya-A-Mehra/node-js-on-ec2.git'
+            }
+        }
+
+        stage('Get AWS Account ID') {
+            steps {
+                script {
+                    AWS_ACCOUNT_ID = sh(script: "aws sts get-caller-identity --query Account --output text", returnStdout: true).trim()
+                    echo "AWS Account ID: ${AWS_ACCOUNT_ID}"
+                }
             }
         }
 
@@ -42,10 +51,10 @@ pipeline {
         stage('Deploy to ECS') {
             steps {
                 script {
-                    sh """
-                    ecs-cli configure --cluster hello-world-cluster --region ${AWS_REGION} --default-launch-type FARGATE
-                    ecs-cli compose --file docker-compose.yml service up --create-log-groups --cluster-config hello-world-cluster
-                    """
+                    withAWS(credentials: "${AWS_CREDENTIALS}", region: "${AWS_REGION}") {
+                        sh 'terraform init'
+                        sh 'terraform apply -auto-approve'
+                    }
                 }
             }
         }
